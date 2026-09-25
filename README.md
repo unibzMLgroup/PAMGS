@@ -1,2 +1,2 @@
-Research project page template for the article (...)
+(https://unibzmlgroup.github.io/PAMGS/) Research project page
 
