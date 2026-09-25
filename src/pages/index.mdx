@@ -1,0 +1,126 @@
+---
+layout: ../layouts/Layout.astro
+title: Gradient Similarity Surgery in Multi-task Deep Learning
+description: Official implementation of the **SAM-GS** optimizer for multitask learning
+
+---
+import Layout from "../layouts/Layout.astro";
+
+import Header from "../components/Header.astro";
+import Video from "../components/Video.astro";
+import HighlightedSection from "../components/HighlightedSection.astro";
+import SmallCaps from "../components/SmallCaps.astro";
+import Figure from "../components/Figure.astro";
+import Image from "../components/Image.astro";
+import TwoColumns from "../components/TwoColumns.astro";
+import ThreeColumns from "../components/ThreeColumns.astro";
+import YouTubeVideo from "../components/YouTubeVideo.astro";
+import LaTeX from "../components/LaTeX.astro";
+
+import { ImageComparison } from "../components/ImageComparison.tsx";
+
+import loss_landscape_traj_0 from "../assets/loss_landscape_traj_0.mp4";
+import loss_landscape_traj_1 from "../assets/loss_landscape_traj_1.mp4";
+import loss_landscape_traj_MTL from "../assets/loss_landscape_traj_MTL.mp4";
+import gradient from "../assets/Conflicting_Transition.png";
+import Splat from "../components/Splat.tsx";
+import alg from "../assets/alg.png";
+import intr from "../assets/intr.pdf";
+
+import CodeBlock from "../components/CodeBlock.astro";
+import Table from "../components/Table.astro";
+export const components = {pre: CodeBlock, table: Table}
+
+<Header
+  title={frontmatter.title}
+  authors={[
+    {
+      name: "Thomas Borsani",
+      url: "https://scholar.google.com/citations?user=4MwSGvIAAAAJ&hl=en&oi=ao",
+      notes: ["1"],
+    },
+    {
+      name: "Giuseppe Di Fatta",
+      url: "https://scholar.google.com/citations?user=BB5R4P8AAAAJ&hl=en&oi=ao",
+      notes: ["1"],
+    },
+  ]}
+  conference="ACML 2026"
+  notes={[
+    {
+      symbol: "1",
+      text: "Free University of Bozen-Bolzano",
+    }
+  ]}
+  links={[
+    {
+      name: "Code",
+      url: "https://github.com/ThomBors/gs_pinn",
+      icon: "ri:github-line",
+    },
+    {
+      name: "arXiv",
+      url: "",
+      icon: "academicons:arxiv",
+    }
+  ]}
+  />
+
+<Video source={loss_landscape_traj_0} />
+
+
+
+<HighlightedSection>
+
+## Abstract
+
+Physics-Informed Neural Networks (PINNs) are trained by optimising a composite objective that combines data fitting with physics-based constraints, typically resulting in a highly imbalanced multi-task optimisation problem. Under these conditions, existing optimisation strategies are affected by conflicting task gradients, leading to slow convergence and unstable training, particularly for stiff and high-frequency partial differential equations. We analyse gradient conflicts throughout training of PINNs with standard optimiser and investigate Multi-Task Deep Learning (MTDL) optimisation methods. 
+In our analysis across four benchmark problems we observed that PINN optimisation exhibits three distinct phases in which angle- and magnitude-based gradient conflicts alternate, with only one present at a time.
+Building on these observations, we propose PAM-GS, a physics-aware gradient surgery method that adaptively mitigates task interference during training according to the observed conflict types. 
+Experiments on four representative PDE benchmarks demonstrate that PAM-GS combines competitive solution accuracy with consistently strong task-balanced performance, outperforming existing methods on most problems.
+
+</HighlightedSection>
+
+## Addressing Gradient Conflicts in PINNs
+
+We study two distinct types of gradient conflict in PINN training: angle-based and magnitude-based.
+
+**Angle conflicts** happen when task gradients point in different directions and partially cancel. They slow convergence but don't usually block it.
+
+**Magnitude conflicts** happen when one task's gradient dominates the others. This biases training toward a single objective and can stall the rest entirely — the more damaging failure mode.
+
+
+### What we observed
+<Figure>
+  <Image slot="figure" source={gradient} altText="Evolution of gradient conflict metrics during PINNs training with ADAM optimiser. The red line denotes the angle-based gradient conflict threshold, while the blue lines highlight the transitions between training phases, from Fitting phase to Diffusion and to Total Diffusion." width={900} height={300}/>
+  <span slot="caption">Evolution of gradient conflict metrics during PINN training with the Adam optimiser. The red line marks the angle-based conflict threshold; the blue lines mark transitions between the Fitting, Diffusion, and Total Diffusion phases.</span>
+</Figure>
+Tracking both conflict types during vanilla PINN training (Adam optimiser), we found they follow the same Fitting → Diffusion → Total Diffusion phase structure previously reported for inter-batch gradients — but here it emerges *within* a batch, across loss terms.
+
+- **Fitting:** angle conflict is negligible, magnitude similarity is low
+- **Diffusion:** angle conflict rises, magnitude similarity rises too
+- **Total Diffusion:** angle conflict falls again, magnitude similarity degrades
+
+Most existing gradient surgery methods (including SAM-GS) assume both conflicts co-occur and correct for them together — which breaks down when magnitude imbalance appears without angular disagreement.
+
+### Our method: PAM-GS
+
+**Physics-Aware Momentum Gradient Surgery** detects which conflict is present at each step and applies a matched fix:
+
+- Magnitude conflict → equalise task gradients
+- Angle conflict → reweight using momentum on gradient-magnitude similarity
+- No conflict → aggregate directly
+
+Magnitude conflicts are prioritised, since they're the ones that can stall training outright — angle conflicts only cost speed.
+
+### Algorithm
+
+<Figure>
+  <Image slot="figure" source={alg} altText="" />
+  <span slot="caption"></span>
+</Figure>
+
+### Loss Landscape
+
+<Video source={loss_landscape_traj_1} />
+<Video source={loss_landscape_traj_MTL} />
