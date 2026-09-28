@@ -19,9 +19,7 @@ import LaTeX from "../components/LaTeX.astro";
 
 import { ImageComparison } from "../components/ImageComparison.tsx";
 
-import loss_landscape_traj_0 from "../assets/loss_landscape_traj_0.mp4";
-import loss_landscape_traj_1 from "../assets/loss_landscape_traj_1.mp4";
-import loss_landscape_traj_MTL from "../assets/loss_landscape_traj_MTL.mp4";
+import loss_landscape_traj from "../assets/loss_landscape_traj.mp4";
 import gradient from "../assets/Conflicting_Transition.png";
 import Splat from "../components/Splat.tsx";
 import alg from "../assets/alg.png";
@@ -65,7 +63,7 @@ export const components = {pre: CodeBlock, table: Table}
   ]}
   />
 
-<Video source={loss_landscape_traj_0} />
+<Video source={loss_landscape_traj} />
 
 
 
@@ -95,11 +93,6 @@ We study two distinct types of gradient conflict in PINN training: angle-based a
   <span slot="caption">Evolution of gradient conflict metrics during PINN training with the Adam optimiser. The red line marks the angle-based conflict threshold; the blue lines mark transitions between the Fitting, Diffusion, and Total Diffusion phases.</span>
 </Figure>
 Tracking both conflict types during vanilla PINN training (Adam optimiser), we found they follow the same Fitting → Diffusion → Total Diffusion phase structure previously reported for inter-batch gradients — but here it emerges *within* a batch, across loss terms.
-
-- **Fitting:** angle conflict is negligible, magnitude similarity is low
-- **Diffusion:** angle conflict rises, magnitude similarity rises too
-- **Total Diffusion:** angle conflict falls again, magnitude similarity degrades
-
 Most existing gradient surgery methods (including SAM-GS) assume both conflicts co-occur and correct for them together — which breaks down when magnitude imbalance appears without angular disagreement.
 
 ### Our method: PAM-GS
@@ -119,7 +112,4 @@ Magnitude conflicts are prioritised, since they're the ones that can stall train
   <span slot="caption"></span>
 </Figure>
 
-### Loss Landscape
 
-<Video source={loss_landscape_traj_1} />
-<Video source={loss_landscape_traj_MTL} />
